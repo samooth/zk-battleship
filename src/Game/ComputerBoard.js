@@ -20,9 +20,8 @@ export const ComputerBoard = ({
   checkIfGameOver,
   setComputerShips,
   playSound,
-  runZK,
-  verifiedHitsByPlayer,
-  processingHitsByPlayer
+  handleFire,
+  hitsProofToPlayer,
 }) => {
   // Ships on an empty layout
   let compLayout = computerShips.reduce(
@@ -57,6 +56,17 @@ export const ComputerBoard = ({
         },
       ];
       setHitsByPlayer(newHits);
+
+      let successfulYourHits = newHits.filter((hit) => hit.type === 'hit').length;
+      let successfulComputerHits = hitsByComputer.filter((hit) => hit.type === 'hit')
+        .length;
+
+      handleFire('player', index, true, {
+        successfulYourHits: successfulYourHits,
+        successfulComputerHits: successfulComputerHits,
+        yourTurn: false
+      });
+
       return newHits;
     }
     if (compLayout[index] === 'empty') {
@@ -68,6 +78,16 @@ export const ComputerBoard = ({
         },
       ];
       setHitsByPlayer(newHits);
+
+      let successfulYourHits = newHits.filter((hit) => hit.type === 'hit').length;
+      let successfulComputerHits = hitsByComputer.filter((hit) => hit.type === 'hit')
+        .length;
+
+      handleFire('player', index, false, {
+        successfulYourHits: successfulYourHits,
+        successfulComputerHits: successfulComputerHits,
+        yourTurn: false
+      });
       return newHits;
     }
   };
@@ -79,8 +99,9 @@ export const ComputerBoard = ({
     compLayout[index] === 'hit' ||
     compLayout[index] === 'miss' ||
     compLayout[index] === 'ship-sunk';
-
+    
   let compSquares = compLayout.map((square, index) => {
+    const hitProofStatus = hitsProofToPlayer.get(index);
     return (
       <div
         // Only display square if it's a hit, miss, or sunk ship
@@ -88,7 +109,7 @@ export const ComputerBoard = ({
           stateToClass[square] === 'hit' ||
           stateToClass[square] === 'miss' ||
           stateToClass[square] === 'ship-sunk'
-            ? `square ${stateToClass[square]} ${processingHitsByPlayer.indexOf(index) > -1 ? 'processing' : (verifiedHitsByPlayer.indexOf(index) > -1 ? 'verified' : '')}`
+            ? `square ${stateToClass[square]} ${hitProofStatus ? hitProofStatus.status : ''}`
             : `square`
         }
         key={`comp-square-${index}`}
@@ -107,19 +128,9 @@ export const ComputerBoard = ({
 
             setComputerShips(shipsWithSunkFlag);
 
-            let indexWasHit = compLayout[index] === 'ship'
-          
-            let successfulYourHits = newHits.filter((hit) => hit.type === 'hit').length;
-            let successfulComputerHits = hitsByComputer.filter((hit) => hit.type === 'hit')
-              .length;
-
-            await runZK(index, true, indexWasHit, successfulYourHits, successfulComputerHits)
-
-            setTimeout(() => {
-              handleComputerTurn();
-            }, 10000);
+            handleComputerTurn();
             
-          } else if(verifiedHitsByPlayer.indexOf(index) > -1) {
+          } else if(hitProofStatus && hitProofStatus.status === 'verified') { // TODO: use somthing like `hitsTxStatus` to replace `hitProofStatus`
 
             const utxo = ContractUtxos.getPlayerUtxoByIndex(index);
       
