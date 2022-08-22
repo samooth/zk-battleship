@@ -70,6 +70,7 @@ export const GameView = ({
         gameState={gameState}
         hitComputer={hitComputer}
         hitsByPlayer={hitsByPlayer}
+        hitsByComputer={hitsByComputer}
         setHitsByPlayer={setHitsByPlayer}
         handleComputerTurn={handleComputerTurn}
         checkIfGameOver={checkIfGameOver}

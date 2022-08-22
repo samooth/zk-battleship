@@ -14,6 +14,7 @@ export const ComputerBoard = ({
   computerShips,
   gameState,
   hitsByPlayer,
+  hitsByComputer,
   setHitsByPlayer,
   handleComputerTurn,
   checkIfGameOver,
@@ -55,7 +56,17 @@ export const ComputerBoard = ({
         },
       ];
       setHitsByPlayer(newHits);
-      handleFire('player', index, true);
+
+      let successfulYourHits = newHits.filter((hit) => hit.type === 'hit').length;
+      let successfulComputerHits = hitsByComputer.filter((hit) => hit.type === 'hit')
+        .length;
+
+      handleFire('player', index, true, {
+        successfulYourHits: successfulYourHits,
+        successfulComputerHits: successfulComputerHits,
+        yourTurn: false
+      });
+
       return newHits;
     }
     if (compLayout[index] === 'empty') {
@@ -67,7 +78,16 @@ export const ComputerBoard = ({
         },
       ];
       setHitsByPlayer(newHits);
-      handleFire('player', index, false);
+
+      let successfulYourHits = newHits.filter((hit) => hit.type === 'hit').length;
+      let successfulComputerHits = hitsByComputer.filter((hit) => hit.type === 'hit')
+        .length;
+
+      handleFire('player', index, false, {
+        successfulYourHits: successfulYourHits,
+        successfulComputerHits: successfulComputerHits,
+        yourTurn: false
+      });
       return newHits;
     }
   };

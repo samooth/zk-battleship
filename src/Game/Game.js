@@ -67,7 +67,7 @@ export const Game = ({ desc }) => {
   const [balance, setBalance] = useState(-1);
 
   const [zkpWorkerForPlayer, setZKPWorkerForPlayer] = useState(null);
-  const [zkpWorkerForComputer, setZKPWorkerForComputer] = useState(null);
+  //const [zkpWorkerForComputer, setZKPWorkerForComputer] = useState(null);
 
   const hp2CRef = useRef(hitsProofToComputer);
   useEffect(() => {
@@ -89,34 +89,73 @@ export const Game = ({ desc }) => {
     hbcRef.current = hitsByComputer
   }, [hitsByComputer]);
 
-  useEffect(() => {
-    const zkpWorkerMsgHandler = event => {
-      const { ctx, isVerified, proof } = event.data;
-      if(isVerified) {
-        const isPlayerFired = ctx.role === 'player';
+
+  const zkpWorkerMsgHandler = (event) => {
+
+    const { ctx, isVerified, proof } = event.data;
+    if(isVerified) {
+      const isPlayerFired = ctx.role === 'player';
+
+
+      const contractUtxo = ContractUtxos.getlast().utxo;
+
+      const Proof = battleShipContract.getTypeClassByType("Proof");
+      const G1Point = battleShipContract.getTypeClassByType("G1Point");
+      const G2Point = battleShipContract.getTypeClassByType("G2Point");
+      const FQ2 = battleShipContract.getTypeClassByType("FQ2");
+
+      console.log("aaa", ctx.newStates)
+
+      move(isPlayerFired, ctx.targetIdx, contractUtxo, ctx.isHit, new Proof({
+        a: new G1Point({
+          x: new Int(proof.proof.a[0]),
+          y: new Int(proof.proof.a[1]),
+        }),
+        b: new G2Point({
+          x: new FQ2({
+            x: new Int(proof.proof.b[0][0]),
+            y: new Int(proof.proof.b[0][1]),
+          }),
+          y: new FQ2({
+            x: new Int(proof.proof.b[1][0]),
+            y: new Int(proof.proof.b[1][1]),
+          })
+        }),
+        c: new G1Point({
+          x: new Int(proof.proof.c[0]),
+          y: new Int(proof.proof.c[1]),
+        })
+      }), ctx.newStates)
+      .then(() => {
+
         if (isPlayerFired) {
           setHitsProofToPlayer(new Map(hp2PRef.current.set(ctx.targetIdx, {status: isVerified ? 'verified' : 'failed', proof}))) 
         } else {
           setHitsProofToComputer(new Map(hp2CRef.current.set(ctx.targetIdx, {status: isVerified ? 'verified' : 'failed', proof})))
         }
 
-        // TODO: send tx or use a dedicated tx-sending worker to the job below.
-      }
-    }
+      })
 
+      // TODO: send tx or use a dedicated tx-sending worker to the job below.
+    }
+  }
+
+  useEffect((battleShipContract) => {
     const playerWorker = new ZKPWorker();
     playerWorker.addEventListener('message', zkpWorkerMsgHandler);
     setZKPWorkerForPlayer(playerWorker);
 
-    const computerWorker = new ZKPWorker();
-    computerWorker.addEventListener('message', zkpWorkerMsgHandler);
-    setZKPWorkerForComputer(computerWorker);
+    //const computerWorker = new ZKPWorker();
+    //computerWorker.addEventListener('message', zkpWorkerMsgHandler);
+    //setZKPWorkerForComputer(computerWorker);
 
     return (() => {
-      zkpWorkerForPlayer.terminate();
-      zkpWorkerForComputer.terminate();
+      playerWorker.terminate();
+      //computerWorker.terminate();
     })
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [battleShipContract]);
+
 
   // *** PLAYER ***
   const selectShip = (shipName) => {
@@ -130,7 +169,7 @@ export const Game = ({ desc }) => {
     });
   };
 
-  const move = async (isPlayerFired, index, contractUtxo, x, y, hit, proof, newStates) => {
+  const move = async (isPlayerFired, index, contractUtxo, hit, proof, newStates) => {
 
     console.log('newStates', newStates)
 
@@ -152,8 +191,8 @@ export const Game = ({ desc }) => {
         const currentTurn = !newStates.yourTurn;
         const privateKey = new bsv.PrivateKey.fromWIF(currentTurn ? PlayerPrivkey.get(Player.You) : PlayerPrivkey.get(Player.Computer));
         const sig = signTx(tx, privateKey, output.script, output.satoshis, 0, Signature.SIGHASH_SINGLE | Signature.SIGHASH_FORKID)
-
-        return battleShipContract.move(sig, x, y, hit, proof, preimage).toScript();
+        const position = indexToCoords(index);
+        return battleShipContract.move(sig, position.x, position.y, hit, proof, preimage).toScript();
       })
       .change(changeAddress)
       .seal();
@@ -296,7 +335,16 @@ export const Game = ({ desc }) => {
     setHitsByComputer(computerHits);
 
     if (fireResult) {
-      handleFire('computer', index, fireResult.type === 'hit');
+
+      let successfulYourHits = hbpRef.current.filter((hit) => hit.type === 'hit').length;
+      let successfulComputerHits = computerHits.filter((hit) => hit.type === 'hit')
+        .length;
+
+      handleFire('computer', index, fireResult.type === 'hit',  {
+        successfulYourHits: successfulYourHits,
+        successfulComputerHits: successfulComputerHits,
+        yourTurn: true
+      });
     }
   };
 
@@ -398,7 +446,7 @@ export const Game = ({ desc }) => {
     ContractUtxos.clear();
   };
 
-  const handleFire = (role, targetIdx, isHit) => {
+  const handleFire = (role, targetIdx, isHit, newStates) => {
     const isPlayerFired = role === 'player';
     const privateInputs = toPrivateInputs(isPlayerFired ? computerShips : placedShips);
     const position = indexToCoords(targetIdx);
@@ -410,14 +458,16 @@ export const Game = ({ desc }) => {
       setHitsProofToComputer(new Map(hitsProofToComputer.set(targetIdx, {status: 'pending'})));
     }
 
-    const zkpWorker = isPlayerFired ? zkpWorkerForPlayer : zkpWorkerForComputer;
+    const zkpWorker = zkpWorkerForPlayer;
+
     // send message to worker
     zkpWorker.postMessage({
       // message id
       ctx: {
         role,
         targetIdx,
-        isHit
+        isHit,
+        newStates
       },
       privateInputs,
       publicInputs
