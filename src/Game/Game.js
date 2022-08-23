@@ -201,6 +201,10 @@ export const Game = ({ desc }) => {
     }).then(async rawTx => {
       ContractUtxos.add(rawTx, isPlayerFired, index);
 
+      battleShipContract.successfulYourHits = newStates.successfulYourHits;
+      battleShipContract.successfulComputerHits = newStates.successfulComputerHits;
+      battleShipContract.yourTurn = newStates.yourTurn;
+
       setTimeout(async () => {
         web3.wallet.getbalance().then(balance => {
           console.log('update balance:', balance)
