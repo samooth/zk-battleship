@@ -104,7 +104,7 @@ export const Game = ({ desc }) => {
       const G2Point = battleShipContract.getTypeClassByType("G2Point");
       const FQ2 = battleShipContract.getTypeClassByType("FQ2");
 
-      console.log("aaa", ctx.newStates)
+      contractUtxo.script = battleShipContract.lockingScript.toHex();
 
       move(isPlayerFired, ctx.targetIdx, contractUtxo, ctx.isHit, new Proof({
         a: new G1Point({

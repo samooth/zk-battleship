@@ -102,12 +102,10 @@ export const ContractUtxos = {
       utxo: {
         txId: tx.id,
         outputIndex: 0,
-        satoshis: tx.outputs[0].satoshis,
-        script: tx.outputs[0].script.toHex()
+        satoshis: tx.outputs[0].satoshis
       },
       index: index,
       player: player,
-      rawTx: rawTx
     };
     utxos.push(utxo)
     ContractUtxos.set(utxos)
