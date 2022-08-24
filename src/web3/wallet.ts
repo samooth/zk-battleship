@@ -1,8 +1,8 @@
 import { Whatsonchain, NetWork } from "./whatsonchain";
 
 export interface UTXO {
-  txId: number,
-  outputIndex: string;
+  txId: string,
+  outputIndex: number;
   satoshis: number;
   script: string;
   address?: string;
