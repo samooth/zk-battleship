@@ -1,6 +1,6 @@
 
 
-const { buildContractClass, num2bin, sha256, bin2num,  Int, compileContract, buildTypeClasses } = require('scryptlib');
+const { buildContractClass, PubKey, bsv,  Int,  buildTypeClasses, toHex, getPreimage, signTx } = require('scryptlib');
 const fs = require('fs');
 const path = require('path');
 const assert = require('assert');
@@ -92,6 +92,103 @@ async function run() {
 }
 
 
+
+
+async function deploy() {
+
+  const {deployContract,
+    fetchUtxos,
+    createInputFromPrevTx,
+    sendTx} = require("./helper")
+
+  const privateKeyPlayer = new bsv.PrivateKey.fromRandom('testnet');
+
+  const publicKeyPlayer = bsv.PublicKey.fromPrivateKey(privateKeyPlayer);
+  const pkhPlayer = bsv.crypto.Hash.sha256ripemd160(publicKeyPlayer.toBuffer());
+  const addressPlayer = privateKeyPlayer.toAddress();
+
+
+  const privateKeyComputer = new bsv.PrivateKey.fromRandom('testnet');
+
+  const publicKeyComputer = bsv.PublicKey.fromPrivateKey(privateKeyComputer);
+  const pkhComputer = bsv.crypto.Hash.sha256ripemd160(publicKeyComputer.toBuffer());
+  const addressComputer = privateKeyComputer.toAddress();
+
+
+  console.log('generating proof ...')
+
+  const proof  = await zokratesProof(playerShips, 0, 0, false);
+
+
+  const Battleship = buildContractClass(loadDesc('battleship'));
+
+  const { Proof, G1Point, G2Point, FQ2 } = buildTypeClasses(Battleship);
+
+  const playerHash = await hashShips(playerShips);
+  const computerHash = await hashShips(playerShips);
+
+  const battleship = new Battleship(new PubKey(toHex(publicKeyPlayer)),
+    new PubKey(toHex(publicKeyComputer)),
+    new Int(playerHash), new Int(computerHash), 0, 0, true);
+
+  console.log("deploying  ...");
+  const deployTx = await deployContract(battleship, 1);
+
+  console.log("deployed:", deployTx.id);
+
+  const newLockingScript = battleship.getNewStateScript({
+      successfulYourHits: 0,
+      successfulComputerHits: 0,
+      yourTurn: false })
+
+  const unlockingTx = new bsv.Transaction();
+  const { privateKey } = require('./privateKey');
+  unlockingTx.addInput(createInputFromPrevTx(deployTx))
+  unlockingTx.setOutput(0, (tx) => {
+    return new bsv.Transaction.Output({
+      script: newLockingScript,
+      satoshis: 1,
+    })
+  })
+  .setInputScript(0, (tx, output) => {
+    const Signature = bsv.crypto.Signature
+    const preimage = getPreimage(tx, output.script, output.satoshis, 0, Signature.SIGHASH_SINGLE | Signature.SIGHASH_FORKID)
+    const currentTurn = true;
+    const privateKey = currentTurn ? privateKeyPlayer : publicKeyComputer;
+    const sig = signTx(tx, privateKey, output.script, output.satoshis, 0, Signature.SIGHASH_SINGLE | Signature.SIGHASH_FORKID)
+
+    return battleship.move(sig, 0, 0, false, new Proof({
+      a: new G1Point({
+        x: new Int(proof.proof.a[0]),
+        y: new Int(proof.proof.a[1]),
+      }),
+      b: new G2Point({
+        x: new FQ2({
+          x: new Int(proof.proof.b[0][0]),
+          y: new Int(proof.proof.b[0][1]),
+        }),
+        y: new FQ2({
+          x: new Int(proof.proof.b[1][0]),
+          y: new Int(proof.proof.b[1][1]),
+        })
+      }),
+      c: new G1Point({
+        x: new Int(proof.proof.c[0]),
+        y: new Int(proof.proof.c[1]),
+      })
+    }), preimage).toScript();
+  })
+  .change(privateKey.toAddress())
+  .seal();
+
+  console.log("unlocking ...")
+  await sendTx(unlockingTx)
+
+  console.log("unlockingTx OK", unlockingTx.id);
+
+}
+
+
 async function  shipsToWitness(ships, x, y, hit) {
   let witness = [];
 
@@ -134,6 +231,15 @@ if(process.argv.includes('--run')) {
   run().then(() => {
     process.exit(0);
   });
+}
+
+if(process.argv.includes('--deploy')) {
+  deploy().then(() => {
+    process.exit(0);
+  })
+  .catch(e => {
+    console.error('deploy error: ', e.response.data)
+  })
 }
 
 module.exports = {

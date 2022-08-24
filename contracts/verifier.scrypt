@@ -1888,50 +1888,50 @@ library ZKSNARK {
 contract Verifier {
 
     static const VerifyingKey vk = {{
-                0x11452daebcafee6ba349aa26693698756bc7d265894d272e07227cf43505756d,
-                0x1951176841772112b0ebe282bfd4d06167970f9c241143b500fc7a1d8056cf88
+                0x0ef26592baed6ff31957751fbb398f3f52b01de3171e02a262de20b5c7eaa7d8,
+                0x0c3784bedf723ab9ee76893d9fd2dfe2f35ae5544e9d04db442face769f051c8
             },{
                 {
-                    0x2e397d710279f2bee07a24cd5f21fd6e9a40d491013f22f8c12c3f8cfc7dc5b0,
-                    0x1354f4a17fd2b181881e7f6a067f8f59e0a02e61c1871ce9c5000fa2eb952907
+                    0x073a4fd8d5323ea35a2af2b6023792be8c13bbfdc40c8692e791449e870757a5,
+                    0x288e5f228ba44a25b9e0d845fc834ea2f9e404bdc6975162664408f09088b731
                 }, 
                 {
-                    0x0ec06dc8d264f0dd8154786636a3f1dca5c7ba6c61a3e14688ee414b20bcbe04,
-                    0x0924419bcac168b0e8c601ae06fa404a4779c38137eb62704063eca5c9d4c19f
+                    0x2cc8ab54aee736b454fcfeb15811176b8f7b9f8af8f9adc9b2dfaeef347b2f1c,
+                    0x2fe8dcee692fa2eb4b766d42815ad2695c87e3b9382c9ad10e509858933d744a
                 }
             },{
                 {
-                    0x16c37f7053631cb81671534d1a30b53d0c0ff0639251e3c7099a1c9cb08e7db8,
-                    0x2b7c38eb9f7a490ac9b80dd8344fddf58a8f414cf5b8820777f36751c41134e3
+                    0x10cc1848f9fb93fe313775715333c13a50f4c90ae21a1b62236c2bb8f8f22cdf,
+                    0x072fd41af9f3ab360bd3af0906b2fd20fe42375efb5744bb50dcd0b41d33b236
                 }, 
                 {
-                    0x11f7edacb48109dcdc12b00536afd35755016775cb8f20603ba548bfaa065259,
-                    0x1f19c654bb5b3b8d03e55f96076ad02bc69f60b0cca8abb38e24b8a2526e14e8
+                    0x24af194af42734e5f2db34e6ccaccd951795d108c615274fabbd2f419254ad82,
+                    0x2fec1e7ccf9b56b3637fcf0f513a8cc1490300df513bcb70fb79a55232c28f55
                 }
             },{
                 {
-                    0x2d07a25ba317ee78b245fea1774404061ed1643438625468d51359d2ac41124c,
-                    0x0844fb2aa83dd28604390d93460a105cc0a7253a1ba799e6d2a5bc2510c1bc98
+                    0x01c6cf916e1dd04d49f6a4b83e386077b9f390142781ad4c15d73bd4c9555199,
+                    0x075df8edab51a8e3c0bff3c3c55a9054ee07805e549a6f3e6d3e1806f6837e4e
                 }, 
                 {
-                    0x0dc82c34ace4a8d6b6908cafec029a1ee9ebc25836545cf59cad1c48c57dec23,
-                    0x1462b68546ecdbdc44f5958b40f720e1ce22f28f4ce9538431f6f1ada7297a4b
+                    0x0a541ff27aed4d5a402a8849d46c16f6472c9b19789d869862d23c0a12e138a2,
+                    0x141afc1f107b416cf84efbbd43c1dfb198663eecd323d8ef6b57323179deb170
                 }
             },[{
-                0x16b695966449f02a02c226b7c82be2c2e275a1e93d0b295fbf7542f0a0f6eeb2,
-                0x2d357eaba3660c69b372f80bf6608736f0c736abd591c97a80fcb28135ec2818
+                0x08abfa02375f63dfe6addb1cfa3937917f7b5cdfa34991d2160c54a24e0b3843,
+                0x0e2cd5a5df539aaf2834ddd2377a9646fc2b95bceec47b7eef6e26a15fd3e318
             },{
-                0x0e6651cab096faf9c18be5e0f87f7e5a03aefb51773cef798d3ecff006357696,
-                0x2d709d08abec6dc7a73b0706ebe6246b4c771ca078402c22d8ec293d9bc6aa78
+                0x2954a22c99365e463210fe4bac92fe4556dc051bba653d88cf53380e28dd8e5b,
+                0x0e3be1db413a8a60938909e1944b22621500a160871b7b34d452863fe7f1aee3
             },{
-                0x0b580a0179e1c151a0d9a096e784eeb57d13e92f5d8d6e94ae47e47d82416893,
-                0x283b1890182290285cc455c0dfb53acae49cd2db30cfbc5620f034a9213a019a
+                0x1a3cce3193d313922565a0421933bc953c653af7c320ec13ab15c7d2a24f826f,
+                0x086e2420ed0e56e6216908e76d37b3472d10823dd80d57b93d3c0fa23407880d
             },{
-                0x24f6d559d40a81b24864e5ef10ec74ec41f862f0513e742778b8e50a0b45f0c9,
-                0x07b43c91434aab4836dae706042175cf89a0a4c6dd6df147b2073e6bbab2ef5a
+                0x2f705718cd0eb24fdd4f3e804e3817f39327d89399711991b4cc626caca2cb7c,
+                0x29c1f3d7958052150cca6dfda2ddd4415ff56076f55e98718cdb115702294336
             },{
-                0x17815912e7d7fbc7bd6a9141ee02b7ab14cd2d0890802a0f0b95549afa1e8cf6,
-                0x0bb657cb4b31ef10201f36c1bc77e1988463d074cec233c29df02633c793fd22
+                0x1dec89e3e5a13441e5c7bf7d51a95547e92531d09eaf84b127c7f09bb8c642db,
+                0x27eac2d6bad802bd1702670f3ce41693d89fa55b89a1708a9bb189d26bc29c83
             }]};
 
     public function unlock(int[ZKSNARK.N] inputs, Proof proof) {
