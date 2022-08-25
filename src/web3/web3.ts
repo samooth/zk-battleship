@@ -82,6 +82,10 @@ export class web3 {
       purpose: 'listUnspent'
     });
 
+    if(utxos.length === 0) {
+      throw new Error('no utxo available')
+    }
+
     tx.from(utxos.slice(0, 1)); // only use first utxo to make code simple
 
     await cbBuildTx(tx);
