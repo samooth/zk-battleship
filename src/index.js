@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 import { WelcomeScreen } from './WelcomeScreen';
 import { Game } from './Game/Game.js';
 import { Header } from './Header';
 import { Footer } from './Footer';
-import { ZKProvider } from './zkProvider';
 
 import './css/style.css';
 import { SensiletWallet, web3} from './web3';
@@ -39,10 +38,6 @@ export const App = () => {
 
     }
   };
-
-  // useEffect(() => {
-  //   ZKProvider.init();
-  // }, []);
 
   // Renders either Welcome Screen or Game
   return (

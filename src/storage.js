@@ -154,6 +154,6 @@ export const CurrentNetwork = {
   },
   switch: () => {
     const network = CurrentNetwork.get();
-    localStorage.setItem(`network`, network == NetWork.Mainnet ? 'test' : 'main');
+    localStorage.setItem(`network`, network === NetWork.Mainnet ? 'test' : 'main');
   },
 };

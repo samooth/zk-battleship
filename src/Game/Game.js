@@ -337,7 +337,7 @@ export const Game = ({ desc }) => {
           console.log('update balance:', balance)
           setBalance(balance)
         })
-      }, 1000);
+      }, 10000);
     } catch (error) {
       console.error("deploy contract fails", error);
       setBattleShipContract(null);

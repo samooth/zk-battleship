@@ -1,4 +1,4 @@
-import { buildContractClass, buildTypeClasses, ScryptType, bsv } from 'scryptlib';
+import { bsv } from 'scryptlib';
 import { UTXO, wallet, SignType } from './wallet';
 import axios from 'axios';
 import { AbstractContract } from 'scryptlib/dist/contract';
