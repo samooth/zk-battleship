@@ -109,7 +109,7 @@ export const ContractUtxos = {
     };
     utxos.push(utxo)
     ContractUtxos.set(utxos)
-
+    console.log('save: utxo:', utxo.utxo.txId)
     return utxo;
   },
   get: () => {

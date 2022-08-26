@@ -6,7 +6,8 @@ const path = require('path');
 const assert = require('assert');
 const { initialize } = require('zokrates-js');
 const { buildMimc7 } = require('circomlibjs');
-const { loadDesc } = require('./helper');
+const { loadDesc,deployContract, createInputFromPrevTx, fetchUtxos, sendTx} = require('./helper');
+const { privateKey } = require('./privateKey');
 
 const playerShips = [
   [7, 1, 1],
@@ -83,11 +84,33 @@ async function run() {
     })
   );
 
-  const result = unlockCall.verify();
+  //const result = unlockCall.verify();
 
-  assert.ok(result.success, result.error)
+  //assert.ok(result.success, result.error)
 
   console.log("Verification OK");
+
+
+  console.log('start deploying zkSNARK verifier ... ')
+  const tx = await deployContract(verifier, 50000);
+  console.log('deployed txid:     ', tx.id)
+
+  const unlockingTx = new bsv.Transaction();
+  unlockingTx.addInput(createInputFromPrevTx(tx))
+  .change(privateKey.toAddress())
+  .setInputScript(0, (_) => {
+      return unlockCall.toScript();
+  })
+  .seal()
+
+  
+  // unlock
+  console.log('start calling zkSNARK verifier ... ')
+  await sendTx(unlockingTx)
+
+  console.log('unlocking txid:     ', unlockingTx.id)
+
+  console.log('Succeeded on testnet')
 
 }
 
@@ -95,11 +118,6 @@ async function run() {
 
 
 async function deploy() {
-
-  const {deployContract,
-    fetchUtxos,
-    createInputFromPrevTx,
-    sendTx} = require("./helper")
 
   const privateKeyPlayer = new bsv.PrivateKey.fromRandom('testnet');
 
@@ -117,7 +135,7 @@ async function deploy() {
 
   console.log('generating proof ...')
 
-  const proof  = await zokratesProof(playerShips, 0, 0, false);
+  const proof  = await zokratesProof(playerShips, 6, 8, true);
 
 
   const Battleship = buildContractClass(loadDesc('battleship'));
@@ -132,32 +150,40 @@ async function deploy() {
     new Int(playerHash), new Int(computerHash), 0, 0, true);
 
   console.log("deploying  ...");
-  const deployTx = await deployContract(battleship, 1);
+  const initAmount = 1000000;
+  const deployTx = await deployContract(battleship, initAmount);
 
   console.log("deployed:", deployTx.id);
 
   const newLockingScript = battleship.getNewStateScript({
-      successfulYourHits: 0,
+      successfulYourHits: 1,
       successfulComputerHits: 0,
       yourTurn: false })
 
+
   const unlockingTx = new bsv.Transaction();
-  const { privateKey } = require('./privateKey');
+
   unlockingTx.addInput(createInputFromPrevTx(deployTx))
   unlockingTx.setOutput(0, (tx) => {
+    const amount = initAmount- tx.getEstimateFee();
+
+    if(amount < 1) {
+      throw new Error('Not enough funds.')
+    }
+
     return new bsv.Transaction.Output({
       script: newLockingScript,
-      satoshis: 1,
+      satoshis: amount,
     })
   })
   .setInputScript(0, (tx, output) => {
-    const Signature = bsv.crypto.Signature
-    const preimage = getPreimage(tx, output.script, output.satoshis, 0, Signature.SIGHASH_SINGLE | Signature.SIGHASH_FORKID)
+    const preimage = getPreimage(tx, output.script, output.satoshis)
     const currentTurn = true;
     const privateKey = currentTurn ? privateKeyPlayer : publicKeyComputer;
-    const sig = signTx(tx, privateKey, output.script, output.satoshis, 0, Signature.SIGHASH_SINGLE | Signature.SIGHASH_FORKID)
+    const sig = signTx(tx, privateKey, output.script, output.satoshis)
+    let amount = initAmount - tx.getEstimateFee();
 
-    return battleship.move(sig, 0, 0, false, new Proof({
+    return battleship.move(sig, 6, 8, true, new Proof({
       a: new G1Point({
         x: new Int(proof.proof.a[0]),
         y: new Int(proof.proof.a[1]),
@@ -176,7 +202,8 @@ async function deploy() {
         x: new Int(proof.proof.c[0]),
         y: new Int(proof.proof.c[1]),
       })
-    }), preimage).toScript();
+    }), amount, preimage).toScript();
+
   })
   .change(privateKey.toAddress())
   .seal();
@@ -230,7 +257,14 @@ async function hashShips(placedShips) {
 if(process.argv.includes('--run')) {
   run().then(() => {
     process.exit(0);
-  });
+  })
+  .catch(e => {
+    if(e.response) {
+      console.error('error: ', e.response.data)
+    } else {
+      console.error('error: ', e)
+    }
+  })
 }
 
 if(process.argv.includes('--deploy')) {
@@ -238,7 +272,11 @@ if(process.argv.includes('--deploy')) {
     process.exit(0);
   })
   .catch(e => {
-    console.error('deploy error: ', e.response.data)
+    if(e.response) {
+      console.error('error: ', e.response.data)
+    } else {
+      console.error('error: ', e)
+    }
   })
 }
 

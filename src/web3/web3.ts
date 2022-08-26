@@ -78,21 +78,9 @@ export class web3 {
       })
     }));
 
-    const utxos = await web3.wallet.listUnspent(1, {
-      purpose: 'listUnspent'
-    });
-
-    if(utxos.length === 0) {
-      throw new Error('no utxo available')
-    }
-
-    tx.from(utxos.slice(0, 1)); // only use first utxo to make code simple
-
     await cbBuildTx(tx);
 
-
-    const rawTx = await  web3.wallet.signRawTransaction(tx.toString(), utxos[0].script, utxos[0].satoshis, 1, SignType.ALL);
-
+    const rawTx = tx.toString();
     await web3.sendRawTx(rawTx);
     return rawTx;
   }

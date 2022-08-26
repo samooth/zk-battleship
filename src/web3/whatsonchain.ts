@@ -14,22 +14,42 @@ export class Whatsonchain {
         Whatsonchain.API_PREFIX = `https://api.whatsonchain.com/v1/bsv/${network === NetWork.Testnet ? 'test' : 'main'}`;
         Whatsonchain.TX_URL_PREFIX = `${network === NetWork.Testnet ? 'https://test.whatsonchain.com/tx' : 'https://whatsonchain.com/tx'}`;
     }
-    static async sendRawTransaction(rawTx: string): Promise<string> {
+
+    
+    static async sendRawTransaction(rawTx: string) {
+
+
         // 1 second per KB
         const size = Math.max(1, rawTx.length / 2 / 1024); //KB
-        const time = Math.max(10000, 1000 * size);
+        const time = Math.max(100000, 1000 * size);
 
         try {
-            const res = await axios.post(`${Whatsonchain.API_PREFIX}/tx/raw`, {
-                txhex: rawTx
-            }, {
-                timeout: time
+            const {
+                data: txid
+            } = await axios({
+                method: 'post',
+                url: 'https://api.taal.com/api/v1/broadcast',
+                data: Buffer.from(rawTx, 'hex'),
+                headers: {
+                    'Authorization': '',
+                    'Content-Type': 'application/octet-stream'
+                },
+                timeout: time,
+                maxBodyLength: Infinity
             });
-            return res.data;
+    
+            return txid;
         } catch (error) {
-            throw new Error('sendRawTransaction error: ')
-        }
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                console.log(error.response.data);
+                console.log(error.response.status);
+                console.log(error.response.headers);
+            } 
 
+            throw new Error('sendRawTransaction error: ' + error.message)
+        }
     }
 
     static async listUnspent(address: string): Promise<any> {

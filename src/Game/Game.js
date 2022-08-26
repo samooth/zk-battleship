@@ -90,12 +90,11 @@ export const Game = ({ desc }) => {
   }, [hitsByComputer]);
 
 
-  const zkpWorkerMsgHandler = (event) => {
+  const zkpWorkerMsgHandler = async (event) => {
 
     const { ctx, isVerified, proof } = event.data;
     if(isVerified) {
       const isPlayerFired = ctx.role === 'player';
-
 
       const contractUtxo = ContractUtxos.getlast().utxo;
 
@@ -106,7 +105,7 @@ export const Game = ({ desc }) => {
 
       contractUtxo.script = battleShipContract.lockingScript.toHex();
 
-      move(isPlayerFired, ctx.targetIdx, contractUtxo, ctx.isHit, new Proof({
+      await move(isPlayerFired, ctx.targetIdx, contractUtxo, ctx.isHit, new Proof({
         a: new G1Point({
           x: new Int(proof.proof.a[0]),
           y: new Int(proof.proof.a[1]),
@@ -133,25 +132,17 @@ export const Game = ({ desc }) => {
         } else {
           setHitsProofToComputer(new Map(hp2CRef.current.set(ctx.targetIdx, {status: isVerified ? 'verified' : 'failed', proof})))
         }
-
       })
-
-      // TODO: send tx or use a dedicated tx-sending worker to the job below.
     }
   }
 
   useEffect((battleShipContract) => {
-    const playerWorker = new ZKPWorker();
-    playerWorker.addEventListener('message', zkpWorkerMsgHandler);
-    setZKPWorkerForPlayer(playerWorker);
-
-    //const computerWorker = new ZKPWorker();
-    //computerWorker.addEventListener('message', zkpWorkerMsgHandler);
-    //setZKPWorkerForComputer(computerWorker);
+    const zkWorkers = new ZKPWorker();
+    zkWorkers.addEventListener('message', zkpWorkerMsgHandler);
+    setZKPWorkerForPlayer(zkWorkers);
 
     return (() => {
-      playerWorker.terminate();
-      //computerWorker.terminate();
+      zkWorkers.terminate();
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [battleShipContract]);
@@ -171,28 +162,75 @@ export const Game = ({ desc }) => {
 
   const move = async (isPlayerFired, index, contractUtxo, hit, proof, newStates) => {
 
-    console.log('newStates', newStates)
+    console.log('start move ... newStates', newStates)
 
     const changeAddress = await web3.getChangeAddress();
 
-    web3.call(contractUtxo, async (tx) => {
+    return web3.call(contractUtxo, async (tx) => {
 
       const newLockingScript = battleShipContract.getNewStateScript(newStates);
 
-      tx.setOutput(0, (tx) => {
-        return new bsv.Transaction.Output({
-          script: newLockingScript,
-          satoshis: 1,
+      if(newStates.successfulYourHits === 17) {
+        const amount = contractUtxo.satoshis - tx.getEstimateFee();
+  
+        if(amount < 1) {
+          alert('Not enough funds.');
+          throw new Error('Not enough funds.')
+        }
+
+        tx.setOutput(0, (tx) => {
+          return new bsv.Transaction.Output({
+            script: bsv.Script.buildPublicKeyHashOut(PlayerPrivkey.get(Player.Computer)),
+            satoshis: amount,
+          })
         })
-      })
-      .setInputScript(0, (tx, output) => {
-        const Signature = bsv.crypto.Signature
-        const preimage = getPreimage(tx, output.script, output.satoshis, 0, Signature.SIGHASH_SINGLE | Signature.SIGHASH_FORKID)
+
+      } else if(newStates.successfulComputerHits === 17) {
+        tx.setOutput(0, (tx) => {
+          const amount = contractUtxo.satoshis - tx.getEstimateFee();
+          if(amount < 1) {
+            alert('Not enough funds.');
+            throw new Error('Not enough funds.')
+          }
+
+          return new bsv.Transaction.Output({
+            script: bsv.Script.buildPublicKeyHashOut(PlayerPrivkey.get(Player.You)),
+            satoshis: amount,
+          })
+        })
+
+      } else {
+        tx.setOutput(0, (tx) => {
+          const amount = contractUtxo.satoshis - tx.getEstimateFee();
+  
+          if(amount < 1) {
+            alert('Not enough funds.');
+            throw new Error('Not enough funds.')
+          }
+  
+          return new bsv.Transaction.Output({
+            script: newLockingScript,
+            satoshis: amount,
+          })
+        })
+      }
+
+
+      tx.setInputScript(0, (tx, output) => {
+        const preimage = getPreimage(tx, output.script, output.satoshis)
         const currentTurn = !newStates.yourTurn;
         const privateKey = new bsv.PrivateKey.fromWIF(currentTurn ? PlayerPrivkey.get(Player.You) : PlayerPrivkey.get(Player.Computer));
-        const sig = signTx(tx, privateKey, output.script, output.satoshis, 0, Signature.SIGHASH_SINGLE | Signature.SIGHASH_FORKID)
+        const sig = signTx(tx, privateKey, output.script, output.satoshis)
         const position = indexToCoords(index);
-        return battleShipContract.move(sig, position.x, position.y, hit, proof, preimage).toScript();
+
+        let amount = contractUtxo.satoshis - tx.getEstimateFee();
+
+        if(amount < 1) {
+          alert('Not enough funds.');
+          throw new Error('Not enough funds.')
+        }
+
+        return battleShipContract.move(sig, position.x, position.y, hit, proof, amount, preimage).toScript();
       })
       .change(changeAddress)
       .seal();
@@ -210,7 +248,7 @@ export const Game = ({ desc }) => {
           console.log('update balance:', balance)
           setBalance(balance)
         })
-      }, 1000);
+      }, 5000);
 
     })
       .catch(e => {
@@ -263,7 +301,7 @@ export const Game = ({ desc }) => {
 
       ContractUtxos.clear();
 
-      const rawTx = await web3.deploy(contract, 1);
+      const rawTx = await web3.deploy(contract, 2000000);
 
       ContractUtxos.add(rawTx, 0, -1);
   

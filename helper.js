@@ -1,13 +1,12 @@
-const { existsSync, readFileSync } = require('fs');
+const { existsSync, readFileSync, writeFileSync } = require('fs');
 const path = require('path');
 const { randomBytes } = require('crypto');
 
 const { compileContract: compileContractImpl, bsv } = require('scryptlib');
 
-const inputIndex = 0
 const inputSatoshis = 100000
 const dummyTxId = randomBytes(32).toString('hex');
-const reversedDummyTxId = Buffer.from(dummyTxId, 'hex').reverse().toString('hex');
+
 const axios = require('axios')
 const API_PREFIX = 'https://api.whatsonchain.com/v1/bsv/test'
 
@@ -32,6 +31,10 @@ function loadDesc(fileName) {
         filePath = path.join(__dirname, `out/${fileName}_desc.json`);
         if (!existsSync(filePath)) {
             filePath = path.join(__dirname, `out/${fileName}_debug_desc.json`);
+
+            if (!existsSync(filePath)) {
+                filePath = path.join(__dirname, `out/${fileName}_release_desc.json`);
+            }
         }
     } else {
         filePath = path.join(__dirname, `out/${fileName}`);
@@ -56,37 +59,29 @@ function newTx() {
 
 
 async function sendTx(tx) {
-    const hex = tx.toString();
 
-    // if (!tx.checkFeeRate(50)) {
-    //     throw new Error(`checkFeeRate fail, transaction fee is too low`)
-    // }
+	const txhex = tx.toString();
 
-    try {
+	const size = Math.max(1, txhex.length / 2 / 1024); //KB
+	const time = Math.max(100000, 1000 * size);
+	
+	const {
+		data: txid
+	} = await axios({
+		method: 'post',
+		url: 'https://api.taal.com/api/v1/broadcast',
+		data: Buffer.from(txhex, 'hex'),
+		headers: {
+			'Authorization': '',
+			'Content-Type': 'application/octet-stream'
+		},
+		timeout: time,
+		maxBodyLength: Infinity
+	});
 
-        const size = Math.max(1, hex.length / 2 / 1024); //KB
-        const time = Math.max(10000, 1000 * size);
-
-        const {
-            data: txid
-        } = await axios({
-            method: 'post',
-            url: `${API_PREFIX}/tx/raw`,
-            data:  {
-                txhex: hex
-            },
-            timeout: time,
-            maxBodyLength: Infinity
-        });
-
-        return txid;
-        
-    } catch (error) {
-
-        throw error
-    }
-
+	return txid;
 }
+
 
 async function fetchUtxos(address) {
     // step 1: fetch utxos

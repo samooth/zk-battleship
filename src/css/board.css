@@ -100,8 +100,8 @@
 }
 
 .board .pending {
-  background-image: url('/pending.png');
-  background-size: 50%;
+  background-image: url('/loading.gif');
+  background-size: 70%;
   background-repeat: no-repeat;
   background-position: center;
   cursor: pointer;
