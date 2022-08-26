@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 export enum NetWork {
     Testnet = 'testnet',
@@ -6,6 +6,9 @@ export enum NetWork {
     Mainnet = 'mainnet',
     STN = 'STN'
 }
+
+
+
 export class Whatsonchain {
     static API_PREFIX = ``;
     static TX_URL_PREFIX = ``;
@@ -39,22 +42,24 @@ export class Whatsonchain {
             });
     
             return txid;
-        } catch (error) {
-            if (error.response) {
-                // The request was made and the server responded with a status code
-                // that falls out of the range of 2xx
-                console.log(error.response.data);
-                console.log(error.response.status);
-                console.log(error.response.headers);
-            } 
+        } catch (e) {
 
-            throw new Error('sendRawTransaction error: ' + error.message)
+            let message = 'Unknown Error'
+
+            if(axios.isAxiosError(e)) {
+                const ae = e as AxiosError;
+                message = JSON.stringify(ae.response?.data || {});
+            } else if(e instanceof Error) {
+                message = e.message;
+            }
+
+            throw new Error('sendRawTransaction error: ' + message)
         }
     }
 
     static async listUnspent(address: string): Promise<any> {
         return axios.get(`${Whatsonchain.API_PREFIX}/address/${address}/unspent`, {
-            timeout: 10000
+            timeout: 30000
         });
     }
 

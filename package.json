@@ -18,10 +18,11 @@
     "cross-env": "^7.0.3",
     "mocha": "^7.0.1",
     "open-color": "^1.7.0",
+    "queue-promise": "^2.2.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-scripts": "3.4.1",
-    "scryptlib": "1.0.2-beta2",
+    "scryptlib": "^1.0.4",
     "zokrates-js": "^1.1.1"
   },
   "scripts": {
