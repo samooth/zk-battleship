@@ -15,20 +15,20 @@ export class Gorillapool {
     }
 
     
-    static async sendRawTransaction(rawTx: string) {
+    static async sendRawTransaction(txhex: string) {
 
 
         // 1 second per KB
-        const size = Math.max(1, rawTx.length / 2 / 1024); //KB
+        const size = Math.max(1, txhex.length / 2 / 1024); //KB
         const time = Math.max(100000, 1000 * size);
 
         try {
             const {
-                data: txid
+                data
             } = await axios({
                 method: 'post',
-                url: 'https://testnet.merchantapi.gorillapool.io/mapi/tx',
-                data: Buffer.from(rawTx, 'hex'),
+                url: `https://testnet.merchantapi.gorillapool.io/mapi/tx`,
+                data: Buffer.from(txhex, 'hex'),
                 headers: {
                     'Accept': 'text/plain',
                     'Content-Type': 'application/octet-stream'
@@ -36,8 +36,16 @@ export class Gorillapool {
                 timeout: time,
                 maxBodyLength: Infinity
             });
-    
-            return txid;
+        
+            const payload = JSON.parse(data.payload)
+            if(payload.returnResult === 'success') {
+                return payload.txid;
+            } else if(payload.returnResult === 'failure') {
+                console.error('sendTx error:', txhex)
+                throw new Error(payload.resultDescription)
+            }
+        
+            throw new Error('sendTx error')
         } catch (e) {
 
             let message = 'Unknown Error'

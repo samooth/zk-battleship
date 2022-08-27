@@ -94,7 +94,7 @@ export const Game = ({ desc }) => {
   useEffect(() => {
     const queue = new Queue({
       concurrent: 1,
-      interval: 2000
+      interval: 20000
     });
 
     setQueue(queue)
@@ -112,6 +112,7 @@ export const Game = ({ desc }) => {
 
       queue.enqueue(async () => {
 
+        console.log('enqueue :', ctx)
         const isPlayerFired = ctx.role === 'player';
 
         const contractUtxo = ContractUtxos.getlast().utxo;
@@ -185,7 +186,7 @@ export const Game = ({ desc }) => {
 
   const move = async (isPlayerFired, index, contractUtxo, hit, proof, newStates) => {
 
-    console.log('start move ... newStates', newStates)
+    console.log('call move ...', 'index=', index, newStates)
 
     const changeAddress = await web3.getChangeAddress();
 

@@ -1,13 +1,25 @@
 import { ZKProvider } from './zkProvider';
 
-self.addEventListener("message", (event) => {
+import Queue from "queue-promise";
+
+const queue = new Queue({
+  concurrent: 1,
+  interval: 2000
+});
+
+self.addEventListener("message", async (event) => {
   const { ctx, publicInputs, privateInputs } = event.data;
   // console.log('job received ', event.data)
   // setTimeout(() => self.postMessage({id, isVerified: true}), 5000) // mock
-  runZKP(privateInputs, publicInputs)
+  console.log('onmessage', ctx)
+
+  queue.enqueue(async () => {
+    await runZKP(privateInputs, publicInputs)
     .then((res) => {
       self.postMessage({ ctx, ...res });
     });
+  })
+
 });
 
 // run zero knowledge proof

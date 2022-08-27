@@ -66,20 +66,28 @@ async function sendTx(tx) {
 	const time = Math.max(100000, 1000 * size);
 	
 	const {
-		data: txid
-	} = await axios({
-		method: 'post',
-		url: 'https://api.taal.com/api/v1/broadcast',
-		data: Buffer.from(txhex, 'hex'),
-		headers: {
-			'Authorization': '',
+        data
+    } = await axios({
+        method: 'post',
+        url: `https://testnet.merchantapi.gorillapool.io/mapi/tx`,
+        data: Buffer.from(txhex, 'hex'),
+        headers: {
+            'Accept': 'text/plain',
 			'Content-Type': 'application/octet-stream'
-		},
-		timeout: time,
-		maxBodyLength: Infinity
-	});
+        },
+        timeout: time,
+        maxBodyLength: Infinity
+    });
 
-	return txid;
+    const payload = JSON.parse(data.payload)
+    if(payload.returnResult === 'success') {
+        return payload.txid;
+    } else if(payload.returnResult === 'failure') {
+        console.error('sendTx error:', txhex)
+        throw new Error(payload.resultDescription)
+    }
+
+	throw new Error('sendTx error')
 }
 
 
