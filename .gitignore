@@ -32,4 +32,3 @@ yarn-debug.log*
 yarn-error.log*
 
 !public/zk/.keep
-public/zk/*

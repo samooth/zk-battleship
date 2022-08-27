@@ -1,6 +1,8 @@
 const path = require('path')
 
-module.exports = function override (config, env) {
+module.exports = function override(config, env) {
+
+
   const wasmExtensionRegExp = /\.wasm$/
   config.resolve.extensions.push('.wasm')
   config.module.rules.forEach(rule => {
@@ -23,10 +25,22 @@ module.exports = function override (config, env) {
     type: 'javascript/auto'
   })
 
-  config.module.rules.push({
-    test: /\.worker\.js$/,
-    use: { loader: 'worker-loader' }
-  })
+  if (env === 'production') {
+
+    config.module.rules.push({
+      test: /\.worker\.js$/,
+      loader: "worker-loader",
+      options: {
+        filename: "[name].[contenthash].worker.js",
+      },
+    })
+
+  } else {
+    config.module.rules.push({
+      test: /\.worker\.js$/,
+      use: { loader: 'worker-loader' }
+    })
+  }
 
   return config
 }
