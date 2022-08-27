@@ -1,13 +1,17 @@
+
 import axios, { AxiosError } from 'axios';
 import { NetWork } from './wallet';
 
-export class Whatsonchain {
+
+
+
+export class Gorillapool {
     static API_PREFIX = ``;
     static TX_URL_PREFIX = ``;
     static setNetwork(network: NetWork) {
 
-        Whatsonchain.API_PREFIX = `https://api.whatsonchain.com/v1/bsv/${network === NetWork.Testnet ? 'test' : 'main'}`;
-        Whatsonchain.TX_URL_PREFIX = `${network === NetWork.Testnet ? 'https://classic-test.whatsonchain.com/tx' : 'https://classic.whatsonchain.com/tx'}`;
+        Gorillapool.API_PREFIX = `https://api.whatsonchain.com/v1/bsv/${network === NetWork.Testnet ? 'test' : 'main'}`;
+        Gorillapool.TX_URL_PREFIX = `${network === NetWork.Testnet ? 'https://classic-test.whatsonchain.com/tx' : 'https://classic.whatsonchain.com/tx'}`;
     }
 
     
@@ -23,10 +27,10 @@ export class Whatsonchain {
                 data: txid
             } = await axios({
                 method: 'post',
-                url: 'https://api.taal.com/api/v1/broadcast',
+                url: 'https://testnet.merchantapi.gorillapool.io/mapi/tx',
                 data: Buffer.from(rawTx, 'hex'),
                 headers: {
-                    'Authorization': '',
+                    'Accept': 'text/plain',
                     'Content-Type': 'application/octet-stream'
                 },
                 timeout: time,
@@ -50,12 +54,12 @@ export class Whatsonchain {
     }
 
     static async listUnspent(address: string): Promise<any> {
-        return axios.get(`${Whatsonchain.API_PREFIX}/address/${address}/unspent`, {
+        return axios.get(`${Gorillapool.API_PREFIX}/address/${address}/unspent`, {
             timeout: 30000
         });
     }
 
     static getTxUri(txid: string): string {
-        return `${Whatsonchain.TX_URL_PREFIX}/${txid}`;
+        return `${Gorillapool.TX_URL_PREFIX}/${txid}`;
     }
 }

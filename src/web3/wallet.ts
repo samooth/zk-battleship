@@ -1,4 +1,12 @@
-import { Whatsonchain, NetWork } from "./whatsonchain";
+import { Gorillapool } from "./gorillapool";
+import { Whatsonchain } from "./whatsonchain";
+
+export enum NetWork {
+  Testnet = 'testnet',
+  Regtest = 'regtest',
+  Mainnet = 'mainnet',
+  STN = 'STN'
+}
 
 export interface UTXO {
   txId: string,
@@ -36,6 +44,7 @@ export abstract class wallet {
 
   constructor(network: NetWork) {
     this.network = network;
+    Gorillapool.setNetwork(this.network);
     Whatsonchain.setNetwork(this.network);
   }
 

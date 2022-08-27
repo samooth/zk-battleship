@@ -1,6 +1,6 @@
-import { UTXO, wallet, SignType } from './wallet';
+import { UTXO, wallet, SignType, NetWork } from './wallet';
 import { bsv } from 'scryptlib';
-import { NetWork, Whatsonchain} from './whatsonchain';
+import { Gorillapool} from './gorillapool';
 
 
 export class SensiletWallet extends wallet {
@@ -125,14 +125,14 @@ export class SensiletWallet extends wallet {
   }
 
   async sendRawTransaction(rawTx: string): Promise<string> {
-    return Whatsonchain.sendRawTransaction(rawTx);
+    return Gorillapool.sendRawTransaction(rawTx);
   }
 
   async listUnspent(minAmount: number, options?: { purpose?: string; }): Promise<UTXO[]> {
 
     let address = await this.sensilet.getAddress();
     console.log(SensiletWallet.DEBUG_TAG, 'listUnspent', address)
-    return Whatsonchain.listUnspent(address).then(res => {
+    return Gorillapool.listUnspent(address).then(res => {
       return res.data.filter((utxo: any) => utxo.value >= minAmount).map((utxo: any) => {
         return {
           txId: utxo.tx_hash,

@@ -1,7 +1,7 @@
-import { bsv } from 'scryptlib';
+import { bsv, AbstractContract} from 'scryptlib';
 import { UTXO, wallet, SignType } from './wallet';
 import axios from 'axios';
-import { AbstractContract } from 'scryptlib/dist/contract';
+
 const WEB3_VERSION = '0.0.2';
 
 
