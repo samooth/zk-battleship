@@ -21,7 +21,8 @@ contract BattleShip {
     {
         require(Tx.checkPreimage(txPreimage));
 
-        Verifier verifier = new Verifier();
+        require(ZKSNARK.verify([this.yourTurn ? this.computerHash : this.yourHash, x, y, hit ? 1 : 0], proof));
+
 
         PubKey pubKey = this.yourTurn ? this.you : this.computer;
         require(checkSig(sig, pubKey));
@@ -37,8 +38,6 @@ contract BattleShip {
                 this.successfulComputerHits++;
             }
         }
-
-        require(verifier.unlock([this.yourTurn ? this.computerHash : this.yourHash, x, y, hit ? 1 : 0], proof));
 
         this.yourTurn = !this.yourTurn;
 
