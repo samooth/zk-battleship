@@ -1,7 +1,7 @@
 /* global BigInt */
 import React, { useState, useRef, useEffect } from 'react';
 import { Int, buildContractClass, bsv, getPreimage, signTx, PubKey } from 'scryptlib';
-import { ContractUtxos,  Player, PlayerPrivkey, PlayerPublicKey } from '../storage';
+import { ContractUtxos, Player, PlayerPrivkey, PlayerPublicKey } from '../storage';
 import { web3 } from '../web3';
 import Balance from './balance';
 import { GameView } from './GameView';
@@ -107,56 +107,54 @@ export const Game = ({ desc }) => {
   const zkpWorkerMsgHandler = async (event) => {
 
     const { ctx, isVerified, proof } = event.data;
-    
-    if(isVerified) {
 
-      queue.enqueue(async () => {
+    if (isVerified) {
 
-        console.log('enqueue :', ctx)
-        const isPlayerFired = ctx.role === 'player';
 
-        const contractUtxo = ContractUtxos.getlast().utxo;
-  
-        const Proof = battleShipContract.getTypeClassByType("Proof");
-        const G1Point = battleShipContract.getTypeClassByType("G1Point");
-        const G2Point = battleShipContract.getTypeClassByType("G2Point");
-        const FQ2 = battleShipContract.getTypeClassByType("FQ2");
-  
-        contractUtxo.script = battleShipContract.lockingScript.toHex();
+      const isPlayerFired = ctx.role === 'player';
 
-        await move(isPlayerFired, ctx.targetIdx, contractUtxo, ctx.isHit, new Proof({
-          a: new G1Point({
-            x: new Int(proof.proof.a[0]),
-            y: new Int(proof.proof.a[1]),
+      const contractUtxo = ContractUtxos.getlast().utxo;
+
+      const Proof = battleShipContract.getTypeClassByType("Proof");
+      const G1Point = battleShipContract.getTypeClassByType("G1Point");
+      const G2Point = battleShipContract.getTypeClassByType("G2Point");
+      const FQ2 = battleShipContract.getTypeClassByType("FQ2");
+
+      contractUtxo.script = battleShipContract.lockingScript.toHex();
+
+      await move(isPlayerFired, ctx.targetIdx, contractUtxo, ctx.isHit, new Proof({
+        a: new G1Point({
+          x: new Int(proof.proof.a[0]),
+          y: new Int(proof.proof.a[1]),
+        }),
+        b: new G2Point({
+          x: new FQ2({
+            x: new Int(proof.proof.b[0][0]),
+            y: new Int(proof.proof.b[0][1]),
           }),
-          b: new G2Point({
-            x: new FQ2({
-              x: new Int(proof.proof.b[0][0]),
-              y: new Int(proof.proof.b[0][1]),
-            }),
-            y: new FQ2({
-              x: new Int(proof.proof.b[1][0]),
-              y: new Int(proof.proof.b[1][1]),
-            })
-          }),
-          c: new G1Point({
-            x: new Int(proof.proof.c[0]),
-            y: new Int(proof.proof.c[1]),
+          y: new FQ2({
+            x: new Int(proof.proof.b[1][0]),
+            y: new Int(proof.proof.b[1][1]),
           })
-        }), ctx.newStates)
+        }),
+        c: new G1Point({
+          x: new Int(proof.proof.c[0]),
+          y: new Int(proof.proof.c[1]),
+        })
+      }), ctx.newStates)
         .then(() => {
-  
+
           if (isPlayerFired) {
-            setHitsProofToPlayer(new Map(hp2PRef.current.set(ctx.targetIdx, {status: isVerified ? 'verified' : 'failed', proof}))) 
+            setHitsProofToPlayer(new Map(hp2PRef.current.set(ctx.targetIdx, { status: isVerified ? 'verified' : 'failed', proof })))
           } else {
-            setHitsProofToComputer(new Map(hp2CRef.current.set(ctx.targetIdx, {status: isVerified ? 'verified' : 'failed', proof})))
+            setHitsProofToComputer(new Map(hp2CRef.current.set(ctx.targetIdx, { status: isVerified ? 'verified' : 'failed', proof })))
           }
         })
         .catch(e => {
           console.error("call contract error:", e);
           alert("call contract error:" + e.message);
         })
-      });
+
     }
   }
 
@@ -188,16 +186,12 @@ export const Game = ({ desc }) => {
 
     console.log('call move ...', 'index=', index, newStates)
 
-    const changeAddress = await web3.getChangeAddress();
-
     return web3.call(contractUtxo, async (tx) => {
 
-      const newLockingScript = battleShipContract.getNewStateScript(newStates);
-
-      if(newStates.successfulYourHits === 17) {
+      if (newStates.successfulYourHits === 17) {
         const amount = contractUtxo.satoshis - tx.getEstimateFee();
-  
-        if(amount < 1) {
+
+        if (amount < 1) {
           alert('Not enough funds.');
           throw new Error('Not enough funds.')
         }
@@ -209,10 +203,10 @@ export const Game = ({ desc }) => {
           })
         })
 
-      } else if(newStates.successfulComputerHits === 17) {
+      } else if (newStates.successfulComputerHits === 17) {
         tx.setOutput(0, (tx) => {
           const amount = contractUtxo.satoshis - tx.getEstimateFee();
-          if(amount < 1) {
+          if (amount < 1) {
             alert('Not enough funds.');
             throw new Error('Not enough funds.')
           }
@@ -226,12 +220,14 @@ export const Game = ({ desc }) => {
       } else {
         tx.setOutput(0, (tx) => {
           const amount = contractUtxo.satoshis - tx.getEstimateFee();
-  
-          if(amount < 1) {
+
+          if (amount < 1) {
             alert('Not enough funds.');
             throw new Error('Not enough funds.')
           }
-  
+
+          const newLockingScript = battleShipContract.getNewStateScript(newStates);
+
           return new bsv.Transaction.Output({
             script: newLockingScript,
             satoshis: amount,
@@ -249,15 +245,14 @@ export const Game = ({ desc }) => {
 
         let amount = contractUtxo.satoshis - tx.getEstimateFee();
 
-        if(amount < 1) {
+        if (amount < 1) {
           alert('Not enough funds.');
           throw new Error('Not enough funds.')
         }
 
         return battleShipContract.move(sig, position.x, position.y, hit, proof, amount, preimage).toScript();
       })
-      .change(changeAddress)
-      .seal();
+        .seal();
 
 
     }).then(async rawTx => {
@@ -328,9 +323,9 @@ export const Game = ({ desc }) => {
       const rawTx = await web3.deploy(contract, 2000000);
 
       ContractUtxos.add(rawTx, 0, -1);
-  
+
       const txid = ContractUtxos.getdeploy().utxo.txId
-  
+
       setDeployTxid(txid)
 
       setTimeout(async () => {
@@ -406,7 +401,7 @@ export const Game = ({ desc }) => {
       let successfulComputerHits = computerHits.filter((hit) => hit.type === 'hit')
         .length;
 
-      handleFire('computer', index, fireResult.type === 'hit',  {
+      handleFire('computer', index, fireResult.type === 'hit', {
         successfulYourHits: successfulYourHits,
         successfulComputerHits: successfulComputerHits,
         yourTurn: true
@@ -519,9 +514,9 @@ export const Game = ({ desc }) => {
     const publicInputs = [isPlayerFired ? computerShipsHash : placedShipsHash, position.x.toString(), position.y.toString(), isHit];
 
     if (isPlayerFired) {
-      setHitsProofToPlayer(new Map(hitsProofToPlayer.set(targetIdx, {status: 'pending'})));
+      setHitsProofToPlayer(new Map(hitsProofToPlayer.set(targetIdx, { status: 'pending' })));
     } else {
-      setHitsProofToComputer(new Map(hitsProofToComputer.set(targetIdx, {status: 'pending'})));
+      setHitsProofToComputer(new Map(hitsProofToComputer.set(targetIdx, { status: 'pending' })));
     }
 
     const zkpWorker = zkpWorkerForPlayer;
