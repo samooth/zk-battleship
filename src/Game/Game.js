@@ -320,7 +320,7 @@ export const Game = ({ desc }) => {
 
       ContractUtxos.clear();
 
-      const rawTx = await web3.deploy(contract, 2000000);
+      const rawTx = await web3.deploy(contract, 10000);
 
       ContractUtxos.add(rawTx, 0, -1);
 

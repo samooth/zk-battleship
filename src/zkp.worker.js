@@ -7,7 +7,9 @@ const queue = new Queue({
   interval: 2000
 });
 
-self.addEventListener("message", async (event) => {
+
+onmessage = async function (event) {
+
   const { ctx, publicInputs, privateInputs } = event.data;
   // console.log('job received ', event.data)
   // setTimeout(() => self.postMessage({id, isVerified: true}), 5000) // mock
@@ -16,11 +18,14 @@ self.addEventListener("message", async (event) => {
   queue.enqueue(async () => {
     await runZKP(privateInputs, publicInputs)
     .then((res) => {
-      self.postMessage({ ctx, ...res });
+      const workerResult = event.data;
+      workerResult.onmessage = true;
+      postMessage({ ctx, ...res });
     });
   })
 
-});
+};
+
 
 // run zero knowledge proof
 function runZKP(privateInputs, publicInputs) {

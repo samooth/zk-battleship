@@ -7,7 +7,7 @@ export const WelcomeScreen = ({ startPlay, desc, setDesc }) => {
   useEffect(() => {
     async function fetchContract() {
       let desc = await web3.loadContractDesc(
-        "/battleship_release_desc.json"
+        "/battleship_debug_desc.json"
       );
       return desc;
     }
