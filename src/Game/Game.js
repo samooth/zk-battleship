@@ -610,18 +610,18 @@ export const Game = ({ desc }) => {
     <React.Fragment>
       <audio
         ref={sunkSoundRef}
-        src="/sounds/ship_sunk.wav"
+        src="/zk-battleship/sounds/ship_sunk.wav"
         className="clip"
         preload="auto"
       />
       <audio
         ref={clickSoundRef}
-        src="/sounds/click.wav"
+        src="/zk-battleship/sounds/click.wav"
         className="clip"
         preload="auto"
       />
-      <audio ref={lossSoundRef} src="/sounds/lose.wav" className="clip" preload="auto" />
-      <audio ref={winSoundRef} src="/sounds/win.wav" className="clip" preload="auto" />
+      <audio ref={lossSoundRef} src="/zk-battleship/sounds/lose.wav" className="clip" preload="auto" />
+      <audio ref={winSoundRef} src="/zk-battleship/sounds/win.wav" className="clip" preload="auto" />
       <GameView
         availableShips={availableShips}
         selectShip={selectShip}
