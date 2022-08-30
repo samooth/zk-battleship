@@ -15,14 +15,11 @@ Setup and check the zkSNARK verifier:
 sh ./scripts/setup.sh
 ```
 
-
-Running `verifier.js`.
+# Start
 
 ```
-node --max-old-space-size=8192 verifier.js --run
+npm start
 ```
-
-
 
 ## Credits
 - diemkay's [battleship fontend](https://github.com/diemkay/battleship)

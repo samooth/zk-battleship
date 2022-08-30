@@ -184,3 +184,9 @@ footer a:hover {
 footer a:visited {
   color: var(--oc-indigo-4);
 }
+
+.wallet {
+  position:absolute;
+  top: 2em;
+  right:  1em;
+}
