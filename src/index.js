@@ -23,7 +23,7 @@ export const App = () => {
     if(isConnected) {
       const n = await wallet.getNetwork();
 
-      if(n === NetWork.Testnet) {
+      if(n === NetWork.Mainnet) {
 
         alert("your sensilet wallet's network is mainnet, switch to testnet before playing.");
         return;
