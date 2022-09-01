@@ -6,7 +6,7 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 
 import './css/style.css';
-import { SensiletWallet, web3} from './web3';
+import { NetWork, SensiletWallet, web3} from './web3';
 import { initPlayer } from './storage';
 
 export const App = () => {
@@ -22,6 +22,13 @@ export const App = () => {
 
     if(isConnected) {
       const n = await wallet.getNetwork();
+
+      if(n === NetWork.Testnet) {
+
+        alert("your sensilet wallet's network is mainnet, switch to testnet before playing.");
+        return;
+      }
+
       web3.setWallet(new SensiletWallet(n));
 
       setAppState('play');
