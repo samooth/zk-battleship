@@ -6,7 +6,7 @@ import { Header } from './Header';
 import { Footer } from './Footer';
 
 import './css/style.css';
-import { NetWork, SensiletWallet, web3} from './web3';
+import { Network, SensiletWallet, web3} from './web3';
 import { initPlayer } from './storage';
 
 export const App = () => {
@@ -23,7 +23,7 @@ export const App = () => {
     if(isConnected) {
       const n = await wallet.getNetwork();
 
-      if(n === NetWork.Mainnet) {
+      if(n === Network.Mainnet) {
 
         alert("your sensilet wallet's network is mainnet, switch to testnet before playing.");
         return;

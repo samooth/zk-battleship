@@ -1,4 +1,4 @@
-import { UTXO, wallet, SignType, NetWork } from './wallet';
+import { UTXO, wallet, SignType, Network } from './wallet';
 import { bsv } from 'scryptlib';
 import { Gorillapool} from './gorillapool';
 
@@ -7,7 +7,7 @@ export class SensiletWallet extends wallet {
   static DEBUG_TAG = 'Sensilet';
   sensilet: any;
 
-  constructor(network: NetWork = NetWork.Testnet) {
+  constructor(network: Network = Network.Testnet) {
     super(network);
     if (typeof (window as any).sensilet !== 'undefined') {
       console.log(SensiletWallet.DEBUG_TAG, 'Sensilet is installed!');
@@ -155,17 +155,17 @@ export class SensiletWallet extends wallet {
   }
 
 
-  async getNetwork(options?: { purpose?: string; }): Promise<NetWork> {
+  async getNetwork(options?: { purpose?: string; }): Promise<Network> {
     const address = await this.sensilet.getAddress();
     const a = new bsv.Address.fromString(address);
-    return a.network.name === 'testnet' ? NetWork.Testnet : NetWork.Mainnet;
+    return a.network.name === 'testnet' ? Network.Testnet : Network.Mainnet;
   }
 }
 
-function getAddressFromP2PKH(script: string, network: NetWork) : string {
+function getAddressFromP2PKH(script: string, network: Network) : string {
   const asm = bsv.Script.fromHex(script).toASM();
   //OP_DUP OP_HASH160 ${address} OP_EQUALVERIFY OP_CHECKSIG
   const pubKeyHash = asm.split(' ')[2]; //get address from script
-  const address = new bsv.Address.fromHex(`${network === NetWork.Testnet ?  '6f' : '00'}${pubKeyHash}`).toString();
+  const address = new bsv.Address.fromHex(`${network === Network.Testnet ?  '6f' : '00'}${pubKeyHash}`).toString();
   return address
 }

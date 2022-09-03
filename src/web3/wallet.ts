@@ -1,7 +1,7 @@
 import { Gorillapool } from "./gorillapool";
 import { Whatsonchain } from "./whatsonchain";
 
-export enum NetWork {
+export enum Network {
   Testnet = 'testnet',
   Regtest = 'regtest',
   Mainnet = 'mainnet',
@@ -40,9 +40,9 @@ export enum SignType {
 
 export abstract class wallet {
 
-  network: NetWork;
+  network: Network;
 
-  constructor(network: NetWork) {
+  constructor(network: Network) {
     this.network = network;
     Gorillapool.setNetwork(this.network);
     Whatsonchain.setNetwork(this.network);
@@ -87,6 +87,6 @@ export abstract class wallet {
   }): Promise<string>;
 
   //returns current network
-  abstract getNetwork(options?: { purpose?: string; }): Promise<NetWork>;
+  abstract getNetwork(options?: { purpose?: string; }): Promise<Network>;
 
 }

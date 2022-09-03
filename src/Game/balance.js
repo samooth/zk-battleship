@@ -1,6 +1,6 @@
 import React from 'react';
 import { useState, useEffect } from "react";
-import { NetWork, web3 } from "../web3";
+import { Network, web3 } from "../web3";
 const Balance = ({
   balance
 }) => {
@@ -18,7 +18,7 @@ const Balance = ({
       });
 
       web3.wallet.getNetwork().then((network) => {
-        if (network === NetWork.Testnet) {
+        if (network === Network.Testnet) {
           setNetwork('Testnet')
         } else {
           setNetwork('Mainnet')
@@ -33,7 +33,7 @@ const Balance = ({
         <div className="balance">
           <label>Balance: {balance > 0 ? balance : _balance} <span> (satoshis)</span></label>
           <br></br>
-          <label>NetWork: {network} </label>
+          <label>Network: {network} </label>
           <br></br>
           <label>Address: {address} </label>
         </div>

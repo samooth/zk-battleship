@@ -1,13 +1,13 @@
 import axios, { AxiosError } from 'axios';
-import { NetWork } from './wallet';
+import { Network } from './wallet';
 
 export class Whatsonchain {
     static API_PREFIX = ``;
     static TX_URL_PREFIX = ``;
-    static setNetwork(network: NetWork) {
+    static setNetwork(network: Network) {
 
-        Whatsonchain.API_PREFIX = `https://api.whatsonchain.com/v1/bsv/${network === NetWork.Testnet ? 'test' : 'main'}`;
-        Whatsonchain.TX_URL_PREFIX = `${network === NetWork.Testnet ? 'https://classic-test.whatsonchain.com/tx' : 'https://classic.whatsonchain.com/tx'}`;
+        Whatsonchain.API_PREFIX = `https://api.whatsonchain.com/v1/bsv/${network === Network.Testnet ? 'test' : 'main'}`;
+        Whatsonchain.TX_URL_PREFIX = `${network === Network.Testnet ? 'https://classic-test.whatsonchain.com/tx' : 'https://classic.whatsonchain.com/tx'}`;
     }
 
     

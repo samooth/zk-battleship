@@ -1,6 +1,6 @@
 
 import axios, { AxiosError } from 'axios';
-import { NetWork } from './wallet';
+import { Network } from './wallet';
 
 
 
@@ -8,10 +8,10 @@ import { NetWork } from './wallet';
 export class Gorillapool {
     static API_PREFIX = ``;
     static TX_URL_PREFIX = ``;
-    static setNetwork(network: NetWork) {
+    static setNetwork(network: Network) {
 
-        Gorillapool.API_PREFIX = `https://api.whatsonchain.com/v1/bsv/${network === NetWork.Testnet ? 'test' : 'main'}`;
-        Gorillapool.TX_URL_PREFIX = `${network === NetWork.Testnet ? 'https://classic-test.whatsonchain.com/tx' : 'https://classic.whatsonchain.com/tx'}`;
+        Gorillapool.API_PREFIX = `https://api.whatsonchain.com/v1/bsv/${network === Network.Testnet ? 'test' : 'main'}`;
+        Gorillapool.TX_URL_PREFIX = `${network === Network.Testnet ? 'https://classic-test.whatsonchain.com/tx' : 'https://classic.whatsonchain.com/tx'}`;
     }
 
     
