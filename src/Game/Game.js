@@ -1,24 +1,18 @@
 /* global BigInt */
-import React, { useState, useRef, useEffect } from 'react';
-import { Int, buildContractClass, bsv, getPreimage, signTx, PubKey } from 'scryptlib';
+import React, { useEffect, useRef, useState } from 'react';
+import { bsv, buildContractClass, getPreimage, Int, PubKey, signTx } from 'scryptlib';
 import { ContractUtxos, Player, PlayerPrivkey, PlayerPublicKey } from '../storage';
 import { web3 } from '../web3';
 import Balance from './balance';
 import { GameView } from './GameView';
 
-import {
-  placeAllComputerShips,
-  SQUARE_STATE,
-  indexToCoords,
-  putEntityInLayout,
-  generateEmptyLayout,
-  generateRandomIndex,
-  getNeighbors,
-  updateSunkShips,
-  coordsToIndex,
-} from './layoutHelpers';
 import { buildMimc7 } from 'circomlibjs';
 import ZKPWorker from '../zkp.worker';
+import {
+  coordsToIndex, generateEmptyLayout,
+  generateRandomIndex,
+  getNeighbors, indexToCoords, placeAllComputerShips, putEntityInLayout, SQUARE_STATE, updateSunkShips
+} from './layoutHelpers';
 
 import Queue from "queue-promise";
 
@@ -111,50 +105,52 @@ export const Game = ({ desc }) => {
     if (isVerified) {
 
 
-      const isPlayerFired = ctx.role === 'player';
+      queue.enqueue(async () => {
 
-      const contractUtxo = ContractUtxos.getlast().utxo;
+        const isPlayerFired = ctx.role === 'player';
 
-      const Proof = battleShipContract.getTypeClassByType("Proof");
-      const G1Point = battleShipContract.getTypeClassByType("G1Point");
-      const G2Point = battleShipContract.getTypeClassByType("G2Point");
-      const FQ2 = battleShipContract.getTypeClassByType("FQ2");
+        const contractUtxo = ContractUtxos.getlast().utxo;
+  
+        const Proof = battleShipContract.getTypeClassByType("Proof");
+        const G1Point = battleShipContract.getTypeClassByType("G1Point");
+        const G2Point = battleShipContract.getTypeClassByType("G2Point");
+        const FQ2 = battleShipContract.getTypeClassByType("FQ2");
+  
+        contractUtxo.script = battleShipContract.lockingScript.toHex();
 
-      contractUtxo.script = battleShipContract.lockingScript.toHex();
-
-      await move(isPlayerFired, ctx.targetIdx, contractUtxo, ctx.isHit, new Proof({
-        a: new G1Point({
-          x: new Int(proof.proof.a[0]),
-          y: new Int(proof.proof.a[1]),
-        }),
-        b: new G2Point({
-          x: new FQ2({
-            x: new Int(proof.proof.b[0][0]),
-            y: new Int(proof.proof.b[0][1]),
+        await move(isPlayerFired, ctx.targetIdx, contractUtxo, ctx.isHit, new Proof({
+          a: new G1Point({
+            x: new Int(proof.proof.a[0]),
+            y: new Int(proof.proof.a[1]),
           }),
-          y: new FQ2({
-            x: new Int(proof.proof.b[1][0]),
-            y: new Int(proof.proof.b[1][1]),
+          b: new G2Point({
+            x: new FQ2({
+              x: new Int(proof.proof.b[0][0]),
+              y: new Int(proof.proof.b[0][1]),
+            }),
+            y: new FQ2({
+              x: new Int(proof.proof.b[1][0]),
+              y: new Int(proof.proof.b[1][1]),
+            })
+          }),
+          c: new G1Point({
+            x: new Int(proof.proof.c[0]),
+            y: new Int(proof.proof.c[1]),
           })
-        }),
-        c: new G1Point({
-          x: new Int(proof.proof.c[0]),
-          y: new Int(proof.proof.c[1]),
-        })
-      }), ctx.newStates)
-        .then(() => {
-
-          if (isPlayerFired) {
-            setHitsProofToPlayer(new Map(hp2PRef.current.set(ctx.targetIdx, { status: isVerified ? 'verified' : 'failed', proof })))
-          } else {
-            setHitsProofToComputer(new Map(hp2CRef.current.set(ctx.targetIdx, { status: isVerified ? 'verified' : 'failed', proof })))
-          }
-        })
-        .catch(e => {
-          console.error("call contract error:", e);
-          alert("call contract error:" + e.message);
-        })
-
+        }), ctx.newStates)
+          .then(() => {
+  
+            if (isPlayerFired) {
+              setHitsProofToPlayer(new Map(hp2PRef.current.set(ctx.targetIdx, { status: isVerified ? 'verified' : 'failed', proof })))
+            } else {
+              setHitsProofToComputer(new Map(hp2CRef.current.set(ctx.targetIdx, { status: isVerified ? 'verified' : 'failed', proof })))
+            }
+          })
+          .catch(e => {
+            console.error("call contract error:", e);
+            alert("call contract error:" + e.message);
+          })
+      })
     }
   }
 
@@ -320,7 +316,7 @@ export const Game = ({ desc }) => {
 
       ContractUtxos.clear();
 
-      const rawTx = await web3.deploy(contract, 10000);
+      const rawTx = await web3.deploy(contract, 2000000);
 
       ContractUtxos.add(rawTx, 0, -1);
 
