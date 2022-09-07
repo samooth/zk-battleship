@@ -34,7 +34,7 @@
     "test": "react-app-rewired test",
     "eject": "react-scripts eject",
     "single-test": "cross-env NODE_OPTIONS=--max-old-space-size=8192 mocha --reporter spec --timeout 1200000000",
-    "zkcompile": "scripts/zkcompile"
+    "setup": "sh scripts/setup-zokrates.sh"
   },
   "eslintConfig": {
     "extends": "react-app"

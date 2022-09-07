@@ -5,6 +5,8 @@ set -e
 
 mkdir -p out
 
+mkdir -p public/zk
+
 cd circuits
 
 zokrates compile --debug -i battleship.zok
@@ -21,6 +23,6 @@ cd ..
 
 npx scryptlib ./contracts/battleship.scrypt
 
-cp ./out/battleship_desc.json ./public
+cp ./out/battleship_desc.json ./public/battleship_debug_desc.json
 
 

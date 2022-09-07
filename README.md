@@ -12,7 +12,7 @@ curl -Ls https://scrypt.io/scripts/setup-zokrates.sh | sh
 Setup and check the zkSNARK verifier:
 
 ```
-sh ./scripts/setup.sh
+npm run setup
 ```
 
 # Start
