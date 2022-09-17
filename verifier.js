@@ -20,7 +20,13 @@ const playerShips = [
 
 async function zokratesProof(ships, x, y, hit) {
 
-  const zokratesProvider = await initialize()
+  const defaultProvider = await initialize();
+
+  let zokratesProvider = defaultProvider.withOptions({ 
+    backend: "bellman",
+    curve: "bn128",
+    scheme: "g16"
+});
 
   const program = fs.readFileSync(path.join(__dirname, 'circuits', 'out'));
   let abi = JSON.parse(fs.readFileSync(path.join(__dirname, 'circuits', 'abi.json')).toString());
