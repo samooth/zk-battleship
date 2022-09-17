@@ -9,6 +9,8 @@ const { buildMimc7 } = require('circomlibjs');
 const { loadDesc,deployContract, createInputFromPrevTx, fetchUtxos, sendTx} = require('./helper');
 const { privateKey } = require('./privateKey');
 
+bsv.Transaction.FEE_PER_KB = 0.0001;
+
 const playerShips = [
   [7, 1, 1],
   [1, 1, 0],
@@ -18,7 +20,7 @@ const playerShips = [
 ];
 
 
-async function zokratesProof(ships, x, y, hit) {
+async function zokratesProof(ships, x, y) {
 
   const defaultProvider = await initialize();
 
@@ -33,10 +35,10 @@ async function zokratesProof(ships, x, y, hit) {
 
 
   // computation
-  const { witness } = zokratesProvider.computeWitness({
+  const { witness, output } = zokratesProvider.computeWitness({
     program: program,
     abi: abi
-  }, await shipsToWitness(ships, x, y, hit));
+  }, await shipsToWitness(ships, x, y));
 
   const provingkey = fs.readFileSync(path.join(__dirname, 'circuits', 'proving.key')).toJSON().data
   const verificationkey = JSON.parse(fs.readFileSync(path.join(__dirname, 'circuits', 'verification.key')).toString())
@@ -48,7 +50,10 @@ async function zokratesProof(ships, x, y, hit) {
 
   console.log('isVerified:' + isVerified)
 
-  return proof;
+  return {
+    proof,
+    output
+  };
 }
 
 
@@ -56,7 +61,7 @@ async function run() {
 
   console.log('generating proof ...')
 
-  const proof  = await zokratesProof(playerShips, 0, 0, false);
+  const {proof, output}  = await zokratesProof(playerShips, 0, 0);
 
   console.log('compiling contract ...')
 
@@ -98,7 +103,7 @@ async function run() {
 
 
   console.log('start deploying zkSNARK verifier ... ')
-  const tx = await deployContract(verifier, 50000);
+  const tx = await deployContract(verifier, 1000);
   console.log('deployed txid:     ', tx.id)
 
   const unlockingTx = new bsv.Transaction();
@@ -141,7 +146,7 @@ async function deploy() {
 
   console.log('generating proof ...')
 
-  const proof  = await zokratesProof(playerShips, 6, 8, true);
+  const {proof, output}  = await zokratesProof(playerShips, 6, 8, true);
 
 
   const Battleship = buildContractClass(loadDesc('battleship'));
@@ -156,13 +161,13 @@ async function deploy() {
     new Int(playerHash), new Int(computerHash), 0, 0, true);
 
   console.log("deploying  ...");
-  const initAmount = 1000000;
+  const initAmount = 1000;
   const deployTx = await deployContract(battleship, initAmount);
 
   console.log("deployed:", deployTx.id);
 
   const newLockingScript = battleship.getNewStateScript({
-      successfulYourHits: 1,
+      successfulYourHits: output ? 1 : 0,
       successfulComputerHits: 0,
       yourTurn: false })
 
@@ -222,7 +227,7 @@ async function deploy() {
 }
 
 
-async function  shipsToWitness(ships, x, y, hit) {
+async function  shipsToWitness(ships, x, y) {
   let witness = [];
 
   for (let i = 0; i < ships.length; i++) {
@@ -235,7 +240,6 @@ async function  shipsToWitness(ships, x, y, hit) {
   witness.push(hash)
   witness.push(x.toString())
   witness.push(y.toString())
-  witness.push(hit)
 
   console.log('withness', witness.join(' '))
   return witness;

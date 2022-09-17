@@ -86,6 +86,9 @@ export const Game = ({ desc }) => {
   }, [hitsByComputer]);
 
   useEffect(() => {
+
+    bsv.Transaction.FEE_PER_KB = 0.0001;
+
     const queue = new Queue({
       concurrent: 1,
       interval: 20000
@@ -100,7 +103,7 @@ export const Game = ({ desc }) => {
 
   const zkpWorkerMsgHandler = async (event) => {
 
-    const { ctx, isVerified, proof } = event.data;
+    const { ctx, isVerified, proof, output } = event.data;
 
     if (isVerified) {
 
@@ -118,7 +121,7 @@ export const Game = ({ desc }) => {
   
         contractUtxo.script = battleShipContract.lockingScript.toHex();
 
-        await move(isPlayerFired, ctx.targetIdx, contractUtxo, ctx.isHit, new Proof({
+        await move(isPlayerFired, ctx.targetIdx, contractUtxo, output, new Proof({
           a: new G1Point({
             x: new Int(proof.proof.a[0]),
             y: new Int(proof.proof.a[1]),
@@ -180,7 +183,7 @@ export const Game = ({ desc }) => {
 
   const move = async (isPlayerFired, index, contractUtxo, hit, proof, newStates) => {
 
-    console.log('call move ...', 'index=', index, newStates)
+    console.log('call move ...', 'index=', index, 'hit=', hit, 'newStates=', newStates)
 
     return web3.call(contractUtxo, async (tx) => {
 
@@ -316,7 +319,7 @@ export const Game = ({ desc }) => {
 
       ContractUtxos.clear();
 
-      const rawTx = await web3.deploy(contract, 2000000);
+      const rawTx = await web3.deploy(contract, 10000);
 
       ContractUtxos.add(rawTx, 0, -1);
 
@@ -397,7 +400,7 @@ export const Game = ({ desc }) => {
       let successfulComputerHits = computerHits.filter((hit) => hit.type === 'hit')
         .length;
 
-      handleFire('computer', index, fireResult.type === 'hit', {
+      handleFire('computer', index, {
         successfulYourHits: successfulYourHits,
         successfulComputerHits: successfulComputerHits,
         yourTurn: true
@@ -503,11 +506,11 @@ export const Game = ({ desc }) => {
     ContractUtxos.clear();
   };
 
-  const handleFire = (role, targetIdx, isHit, newStates) => {
+  const handleFire = (role, targetIdx, newStates) => {
     const isPlayerFired = role === 'player';
     const privateInputs = toPrivateInputs(isPlayerFired ? computerShips : placedShips);
     const position = indexToCoords(targetIdx);
-    const publicInputs = [isPlayerFired ? computerShipsHash : placedShipsHash, position.x.toString(), position.y.toString(), isHit];
+    const publicInputs = [isPlayerFired ? computerShipsHash : placedShipsHash, position.x.toString(), position.y.toString()];
 
     if (isPlayerFired) {
       setHitsProofToPlayer(new Map(hitsProofToPlayer.set(targetIdx, { status: 'pending' })));
@@ -523,7 +526,6 @@ export const Game = ({ desc }) => {
       ctx: {
         role,
         targetIdx,
-        isHit,
         newStates
       },
       privateInputs,

@@ -35,12 +35,15 @@ function runZKP(privateInputs, publicInputs) {
       // computer witness for fire result
       return ZKProvider.computeWitness(privateInputs.concat(publicInputs))
     })
-    .then(async ({ witness }) => {
-      return ZKProvider.generateProof(witness);
+    .then(async ({ witness, output }) => {
+      const proof = await ZKProvider.generateProof(witness);
+      output = output === 'true' ? true : false;
+      return {proof, output}
     })
-    .then(async (proof) => {
+    .then(async ({proof, output}) => {
       const isVerified = await ZKProvider.verify(proof);
-      return { isVerified, proof };
+      console.log('verify proof:', isVerified)
+      return { isVerified, proof, output};
     })
     .catch(e => {
       console.error('zkp.worker error:', e)

@@ -15,7 +15,13 @@ export class ZKProvider {
     // console.log('ZKP init...')
     if (ZKProvider.instance) return ZKProvider;
     try {
-      let zokratesProvider = await initialize();
+      const defaultProvider = await initialize();
+
+      let zokratesProvider = defaultProvider.withOptions({ 
+          backend: "bellman",
+          curve: "bn128",
+          scheme: "g16"
+      });
       let program = await fetch('/zk-battleship/zk/out').then(resp => resp.arrayBuffer()).then(data => new Uint8Array(data));
       let abi = await fetch('/zk-battleship/zk/abi.json').then(resp => resp.json());
       let proving_key = await fetch('/zk-battleship/zk/proving.key').then(resp => resp.arrayBuffer()).then(data => new Uint8Array(data));

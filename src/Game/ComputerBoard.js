@@ -61,7 +61,7 @@ export const ComputerBoard = ({
       let successfulComputerHits = hitsByComputer.filter((hit) => hit.type === 'hit')
         .length;
 
-      handleFire('player', index, true, {
+      handleFire('player', index, {
         successfulYourHits: successfulYourHits,
         successfulComputerHits: successfulComputerHits,
         yourTurn: false
@@ -83,7 +83,7 @@ export const ComputerBoard = ({
       let successfulComputerHits = hitsByComputer.filter((hit) => hit.type === 'hit')
         .length;
 
-      handleFire('player', index, false, {
+      handleFire('player', index, {
         successfulYourHits: successfulYourHits,
         successfulComputerHits: successfulComputerHits,
         yourTurn: false
