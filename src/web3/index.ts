@@ -3,3 +3,4 @@ export * from './wallet';
 export * from './sensiletwallet';
 export * from './whatsonchain';
 export * from './gorillapool';
+export * from './bitails';

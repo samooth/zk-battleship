@@ -1,7 +1,7 @@
 import { UTXO, wallet, SignType, Network } from './wallet';
 import { bsv } from 'scryptlib';
-import { Gorillapool} from './gorillapool';
-
+//import { Gorillapool} from './gorillapool';
+import { Bitails} from './bitails';
 
 export class SensiletWallet extends wallet {
   static DEBUG_TAG = 'Sensilet';
@@ -125,14 +125,16 @@ export class SensiletWallet extends wallet {
   }
 
   async sendRawTransaction(rawTx: string): Promise<string> {
-    return Gorillapool.sendRawTransaction(rawTx);
+//    return Gorillapool.sendRawTransaction(rawTx);
+    return Bitails.sendRawTransaction(rawTx);
+
   }
 
   async listUnspent(minAmount: number, options?: { purpose?: string; }): Promise<UTXO[]> {
 
     let address = await this.sensilet.getAddress();
     console.log(SensiletWallet.DEBUG_TAG, 'listUnspent', address)
-    return Gorillapool.listUnspent(address).then(res => {
+    return Bitails.listUnspent(address).then(res => {
       return res.data.filter((utxo: any) => utxo.value >= minAmount).map((utxo: any) => {
         return {
           txId: utxo.tx_hash,

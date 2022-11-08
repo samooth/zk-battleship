@@ -1,3 +1,4 @@
+import { Bitails } from "./bitails";
 import { Gorillapool } from "./gorillapool";
 import { Whatsonchain } from "./whatsonchain";
 
@@ -44,6 +45,7 @@ export abstract class wallet {
 
   constructor(network: Network) {
     this.network = network;
+    Bitails.setNetwork(this.network);
     Gorillapool.setNetwork(this.network);
     Whatsonchain.setNetwork(this.network);
   }

@@ -21,7 +21,8 @@ export class web3 {
 
   static loadContractDesc(url: string): Promise<any> {
     return axios.get(url, {
-      timeout: 10000
+      // for narrow connection and big files
+      timeout: 30000
     }).then(res => {
       return res.data;
     });
@@ -40,7 +41,6 @@ export class web3 {
 
   static async deploy(contract: AbstractContract, amountInContract: number): Promise<string> {
     const wallet = web3.wallet
-
     const changeAddress = await web3.wallet.getRawChangeAddress();
 
     return wallet.listUnspent(amountInContract, {
